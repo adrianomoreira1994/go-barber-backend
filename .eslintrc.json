@@ -29,5 +29,6 @@
       "typescript": {}
     }
   },
-  "prettier/prettier": "error"
+  "prettier/prettier": "error",
+  "@typescript-eslint/camelcase": "off"
 }
