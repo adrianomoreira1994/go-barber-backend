@@ -1,15 +1,13 @@
 import { injectable, inject } from 'tsyringe';
-import User from '../infra/typeorm/entities/User';
-
-import IUserRepository from '../repositories/IUserRepository';
-import IHashProvider from '../providers/HashProvider/models/IHashProvider';
-
+// import User from '../infra/typeorm/entities/User';
 import AppError from '@shared/errors/AppError';
 
+import IUserRepository from '../repositories/IUserRepository';
+import IMailProvider from '@shared/container/providers/MailProvider/models/IMailProvider';
+import IUserTokensRepository from '../repositories/IUserTokensRepository';
+
 interface IRequest {
-  name: string;
   email: string;
-  password: string;
 }
 
 @injectable()
@@ -18,26 +16,26 @@ class SendForgotPasswordEmailService {
     @inject('UserRepository')
     private userRepository: IUserRepository,
 
-    @inject('HashProvider')
-    private hashProvider: IHashProvider,
+    @inject('UserTokensRepository')
+    private userTokensRepository: IUserTokensRepository,
+
+    @inject('MailProvider')
+    private MailProvider: IMailProvider,
   ) {}
 
-  async execute({ name, email, password }: IRequest): Promise<User> {
-    const checkUserExists = await this.userRepository.findByEmail(email);
+  async execute({ email }: IRequest): Promise<void> {
+    const user = await this.userRepository.findByEmail(email);
 
-    if (checkUserExists) {
-      throw new AppError('E-mail address already used');
+    if (!user) {
+      throw new AppError('User does not exists');
     }
 
-    const hashedPassword = await this.hashProvider.generateHash(password);
+    await this.userTokensRepository.generate(user.id);
 
-    const user = this.userRepository.create({
-      name,
+    this.MailProvider.sendMail(
       email,
-      password: hashedPassword,
-    });
-
-    return user;
+      'Pedido de recuperação de senha recebido',
+    );
   }
 }
 
