@@ -5,14 +5,8 @@ import { parseISO } from 'date-fns';
 import CreateAppointmentService from '@modules/appointments/services/CreateAppointmentService';
 
 export default class AppointmentsController {
-  async index(request: Request, response: Response) {
-    // const appointmentRepository = new AppointmentsRepository();
-    // const appointmentsRepository = getCustomRepository(AppointmentsRepository);
-    // const appointments = await appointmentsRepository.find();
-    // return response.json(appointments);
-  }
-
   async create(request: Request, response: Response) {
+    const user_id = request.user.id;
     const { provider_id, date } = request.body;
     const parsedDate = parseISO(date);
 
@@ -20,6 +14,7 @@ export default class AppointmentsController {
 
     const appointment = await createAppointment.execute({
       date: parsedDate,
+      user_id,
       provider_id,
     });
 
